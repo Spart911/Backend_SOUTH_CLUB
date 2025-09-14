@@ -6,12 +6,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
-    characteristics TEXT,
     color TEXT,
     composition TEXT,
     print_technology TEXT,
-    size INTEGER NOT NULL CHECK (size >= 0 AND size <= 4),
-    price INTEGER NOT NULL CHECK (price > 0),
+    size JSON NOT NULL,
+    price INTEGER NOT NULL CHECK (price >= 0),
+    order_number INTEGER,
+    soon BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -37,8 +38,9 @@ CREATE TABLE IF NOT EXISTS slider_photos (
 
 -- Создаем индексы для оптимизации
 CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
-CREATE INDEX IF NOT EXISTS idx_products_size ON products(size);
 CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
+CREATE INDEX IF NOT EXISTS idx_products_order_number ON products(order_number);
+CREATE INDEX IF NOT EXISTS idx_products_soon ON products(soon);
 CREATE INDEX IF NOT EXISTS idx_product_photos_product_id ON product_photos(product_id);
 CREATE INDEX IF NOT EXISTS idx_product_photos_priority ON product_photos(priority);
 CREATE INDEX IF NOT EXISTS idx_slider_photos_order ON slider_photos(order_number);
@@ -59,10 +61,10 @@ CREATE TRIGGER update_products_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Вставляем тестовые данные (опционально)
-INSERT INTO products (name, characteristics, color, composition, print_technology, size, price) VALUES
-('Футболка SOUTH CLUB', '100% хлопок, свободный крой', 'Белый', '100% хлопок', 'Термопечать', 2, 2500),
-('Худи SOUTH CLUB', 'Теплое, уютное', 'Черный', '80% хлопок, 20% полиэстер', 'Вышивка', 3, 4500),
-('Кепка SOUTH CLUB', 'Регулируемый размер', 'Красный', '100% хлопок', 'Вышивка', 1, 1200)
+INSERT INTO products (name, color, composition, print_technology, size, price, order_number, soon) VALUES
+('Футболка SOUTH CLUB', 'Белый', '100% хлопок', 'Термопечать', '[1, 2, 3]', 2500, 1, FALSE),
+('Худи SOUTH CLUB', 'Черный', '80% хлопок, 20% полиэстер', 'Вышивка', '[2, 3, 4]', 4500, 2, FALSE),
+('Кепка SOUTH CLUB', 'Красный', '100% хлопок', 'Вышивка', '[0, 1]', 1200, 3, FALSE)
 ON CONFLICT DO NOTHING;
 
 -- Создаем пользователя для приложения (если нужно)
