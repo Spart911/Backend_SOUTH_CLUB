@@ -11,6 +11,7 @@ from ...schemas.photo import (
     ProductPhotoUpload
 )
 from ...repositories.photo import ProductPhotoRepository
+from ...models.photo import ProductPhoto
 from ...core.logging import get_logger
 
 router = APIRouter(prefix="/photos", tags=["Фотографии товаров"])
