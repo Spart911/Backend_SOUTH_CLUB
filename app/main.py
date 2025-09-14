@@ -103,6 +103,14 @@ async def startup_event():
         # Создаем таблицы в БД
         create_tables()
         logger.info("База данных инициализирована")
+        
+        # Отладка маршрутов
+        logger.info("=== ОТЛАДКА: Доступные маршруты ===")
+        for route in app.routes:
+            if hasattr(route, 'path') and hasattr(route, 'methods'):
+                logger.info(f"Путь: {route.path}, Методы: {route.methods}")
+        logger.info("=== Конец отладки маршрутов ===")
+        
         logger.info("🚀 SOUTH CLUB Backend успешно запущен")
     except Exception as e:
         logger.error(f"Ошибка при запуске приложения: {str(e)}")
