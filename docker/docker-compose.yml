@@ -23,7 +23,7 @@ services:
       dockerfile: docker/Dockerfile
     container_name: south_club_backend
     environment:
-      
+      - DATABASE_URL=postgresql://south_club_user:south_club_password@postgres:5432/south_club_db
     volumes:
       - ../uploads:/app/uploads
     ports:
@@ -38,7 +38,9 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: south_club_pgadmin
-    
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@southclub.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
     ports:
       - "5050:80"
     depends_on:
