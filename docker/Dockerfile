@@ -30,7 +30,7 @@ RUN useradd --create-home --shell /bin/bash app \
 USER app
 
 # Открываем порт
-EXPOSE 8000
+EXPOSE 6677
 
 # Команда запуска
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "6677"]
