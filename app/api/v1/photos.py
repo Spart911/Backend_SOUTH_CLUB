@@ -19,7 +19,7 @@ photo_repo = ProductPhotoRepository()
 logger = get_logger("PhotosAPI")
 
 
-@router.post("/upload-photo", response_model=ProductPhotoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/actions/upload-photo", response_model=ProductPhotoResponse, status_code=status.HTTP_201_CREATED)
 async def upload_product_photo(
     product_id: UUID = Query(..., description="ID товара"),
     photo: UploadFile = File(...),
