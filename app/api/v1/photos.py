@@ -30,6 +30,12 @@ async def upload_product_photo(
     """
     Загрузить фотографию для товара (требует аутентификации)
     """
+    logger.info(f"=== ОТЛАДКА: Запрос дошел до upload_product_photo ===")
+    logger.info(f"product_id: {product_id}")
+    logger.info(f"photo.filename: {photo.filename}")
+    logger.info(f"photo.content_type: {photo.content_type}")
+    logger.info(f"priority: {priority}")
+    logger.info(f"current_admin: {current_admin}")
     logger.info(f"Загрузка фотографии для товара {product_id} от админа {current_admin}")
     
     try:

@@ -16,6 +16,8 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(securi
     """
     Dependency для проверки аутентификации админа
     """
+    logger.info(f"=== ОТЛАДКА: get_current_admin вызван ===")
+    logger.info(f"credentials: {credentials}")
     try:
         # Проверяем что токен не пустой
         if not credentials.credentials or not credentials.credentials.strip():
