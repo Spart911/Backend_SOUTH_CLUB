@@ -1,0 +1,55 @@
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15
+    container_name: south_club_postgres
+    environment:
+      POSTGRES_DB: south_club_db
+      POSTGRES_USER: south_club_user
+      POSTGRES_PASSWORD: south_club_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - south_club_network
+    restart: unless-stopped
+
+  # FastAPI приложение
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: south_club_backend
+    environment:
+      
+    volumes:
+      - ../uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - south_club_network
+    restart: unless-stopped
+
+  # pgAdmin для управления БД (опционально)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: south_club_pgadmin
+    
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - south_club_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  south_club_network:
+    driver: bridge
