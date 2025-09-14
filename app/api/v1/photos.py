@@ -19,7 +19,7 @@ photo_repo = ProductPhotoRepository()
 logger = get_logger("PhotosAPI")
 
 
-@router.post("/actions/upload-photo/", response_model=ProductPhotoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload-photo", response_model=ProductPhotoResponse, status_code=status.HTTP_201_CREATED)
 async def upload_product_photo(
     product_id: UUID = Query(..., description="ID товара"),
     photo: UploadFile = File(...),
@@ -31,22 +31,14 @@ async def upload_product_photo(
     Загрузить фотографию для товара (требует аутентификации)
     """
     logger.info(f"=== ОТЛАДКА: Запрос дошел до upload_product_photo ===")
-    logger.info(f"product_id: {product_id}")
-    logger.info(f"photo.filename: {photo.filename}")
-    logger.info(f"photo.content_type: {photo.content_type}")
-    logger.info(f"priority: {priority}")
-    logger.info(f"current_admin: {current_admin}")
-    logger.info(f"Загрузка фотографии для товара {product_id} от админа {current_admin}")
-    
+    logger.info(f"product_id: {product_id}, priority: {priority}, admin: {current_admin}")
+
     try:
-        # Валидация файла
+        # Валидация и сохранение файла
         file_service.validate_file(photo)
-        
-        # Сохранение файла
         file_path = file_service.save_product_photo(photo, str(product_id))
-        
+
         # Создание записи в БД
-        from ...models.photo import ProductPhoto
         obj = ProductPhoto(
             product_id=product_id,
             name=photo.filename or "unnamed",
@@ -58,11 +50,11 @@ async def upload_product_photo(
         db.refresh(obj)
 
         logger.info(f"Фотография {photo.filename} успешно загружена для товара {product_id}")
-
         return ProductPhotoResponse.model_validate(obj)
+
     except Exception as e:
         logger.error(f"Ошибка при загрузке фотографии для товара {product_id}: {str(e)}")
-        raise
+        raise HTTPException(status_code=500, detail="Ошибка при загрузке фотографии")
 
 
 @router.get("/product/{product_id}", response_model=List[ProductPhotoResponse])
