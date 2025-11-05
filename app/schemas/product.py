@@ -6,6 +6,7 @@ from uuid import UUID
 class ProductBase(BaseModel):
     """Базовая схема товара"""
     name: str = Field(..., description="Название товара")
+    sku: Optional[str] = Field(None, description="Артикул товара")
     color: Optional[str] = Field(None, description="Цвет")
     composition: Optional[str] = Field(None, description="Состав")
     print_technology: Optional[str] = Field(None, description="Технология печати")
@@ -46,6 +47,7 @@ class ProductCreate(ProductBase):
             "examples": [
                 {
                     "name": "Худи SOUTH CLUB",
+                    "sku": "SC-HOODIE-001",
                     "color": "Черный",
                     "composition": "80% хлопок, 20% полиэстер",
                     "print_technology": "Вышивка",
@@ -61,6 +63,7 @@ class ProductCreate(ProductBase):
 class ProductUpdate(BaseModel):
     """Схема для обновления товара"""
     name: Optional[str] = Field(None, description="Название товара")
+    sku: Optional[str] = Field(None, description="Артикул товара")
     color: Optional[str] = Field(None, description="Цвет")
     composition: Optional[str] = Field(None, description="Состав")
     print_technology: Optional[str] = Field(None, description="Технология печати")
@@ -122,6 +125,7 @@ class ProductResponse(ProductBase):
                 {
                     "id": "58289d8c-6015-467d-97f3-7c87ccaf0d42",
                     "name": "Худи SOUTH CLUB",
+                    "sku": "SC-HOODIE-001",
                     "color": "Черный",
                     "composition": "80% хлопок, 20% полиэстер",
                     "print_technology": "Вышивка",

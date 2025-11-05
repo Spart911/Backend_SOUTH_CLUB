@@ -13,6 +13,7 @@ class Product(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(Text, nullable=False, comment="Название товара")
+    sku = Column(Text, nullable=True, comment="Артикул товара")
     color = Column(Text, nullable=True, comment="Цвет")
     composition = Column(Text, nullable=True, comment="Состав")
     print_technology = Column(Text, nullable=True, comment="Технология печати")
