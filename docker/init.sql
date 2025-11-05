@@ -6,6 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
+    sku TEXT,
     color TEXT,
     composition TEXT,
     print_technology TEXT,
@@ -16,6 +17,9 @@ CREATE TABLE IF NOT EXISTS products (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Добавляем комментарий к колонке sku
+COMMENT ON COLUMN products.sku IS 'Артикул товара';
 
 -- Создаем таблицу фотографий товаров
 CREATE TABLE IF NOT EXISTS product_photos (
