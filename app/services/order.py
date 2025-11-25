@@ -4,6 +4,7 @@ from ..models.order import Order
 from ..schemas.order import OrderCreate, OrderResponse, OrderStatusResponse
 from ..repositories.order import OrderRepository
 from ..core.logging import get_logger
+from datetime import datetime
 import uuid
 
 logger = get_logger(__name__)
@@ -29,13 +30,17 @@ class OrderService:
                     "price": item.price
                 })
             
+            # Определяем время заказа: если не передано, используем текущее
+            order_time = order_data.order_time or datetime.now()
+
             # Создаем объект заказа
             order = Order(
+                customer_name=order_data.customer_name,
                 email=order_data.email,
                 phone=order_data.phone,
                 address=order_data.address,
                 delivery_time=order_data.delivery_time,
-                order_time=order_data.order_time,
+                order_time=order_time,
                 items=items_data,
                 total_amount=order_data.total_amount,
                 status="created"
@@ -93,6 +98,7 @@ class OrderService:
             return OrderStatusResponse(
                 order_id=order.id,
                 status=order.status,
+                total_amount=order.total_amount,
                 payment_id=order.payment_id
             )
             

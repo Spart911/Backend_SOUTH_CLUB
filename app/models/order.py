@@ -8,11 +8,12 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True, comment="ID заказа")
+    customer_name = Column(String(255), nullable=False, comment="Имя клиента")
     email = Column(String(255), nullable=False, comment="Email клиента")
     phone = Column(String(20), nullable=False, comment="Телефон клиента")
     address = Column(Text, nullable=False, comment="Адрес доставки")
-    delivery_time = Column(String(100), nullable=False, comment="Время доставки")
-    order_time = Column(String(100), nullable=False, comment="Время заказа")
+    delivery_time = Column(DateTime(timezone=True), nullable=False, comment="Время доставки")
+    order_time = Column(DateTime(timezone=True), nullable=False, comment="Время заказа")
     items = Column(JSON, nullable=False, comment="Товары в заказе (JSON)")
     total_amount = Column(Float, nullable=False, comment="Общая сумма заказа")
     status = Column(String(50), nullable=False, default="created", comment="Статус заказа")
