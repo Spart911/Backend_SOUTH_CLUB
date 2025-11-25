@@ -31,15 +31,24 @@ class BaseRepository(Generic[ModelType]):
     
     def create(self, db: Session, obj_in: Any) -> ModelType:
         """
-        Создать новый объект
+        Создать новый объект.
+        Поддерживает как Pydantic-модели, так и уже созданные ORM-объекты.
         """
-        # Поддержка Pydantic v2
-        if hasattr(obj_in, 'model_dump'):
-            obj_data = obj_in.model_dump()
+        # Если нам уже передали ORM-объект нужного типа — просто сохраняем его
+        if isinstance(obj_in, self.model):
+            db_obj = obj_in
         else:
-            obj_data = obj_in.dict()
-        
-        db_obj = self.model(**obj_data)
+            # Поддержка Pydantic v2 / v1
+            if hasattr(obj_in, "model_dump"):
+                obj_data = obj_in.model_dump()
+            elif hasattr(obj_in, "dict"):
+                obj_data = obj_in.dict()
+            else:
+                # На всякий случай пытаемся использовать как обычный dict
+                obj_data = dict(obj_in)
+
+            db_obj = self.model(**obj_data)
+
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
