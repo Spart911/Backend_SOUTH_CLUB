@@ -116,7 +116,11 @@ class OrderService:
                 return False
             
             order.status = status
-            self.repository.update(db, order)
+            # Поскольку мы работаем напрямую с ORM-объектом Order,
+            # просто фиксируем изменения через сессию, не используя generic update
+            db.add(order)
+            db.commit()
+            db.refresh(order)
             logger.info(f"Статус заказа {order_id} обновлен на {status}")
             return True
             
@@ -134,7 +138,10 @@ class OrderService:
                 return False
             
             order.payment_id = payment_id
-            self.repository.update(db, order)
+            # Аналогично статусу, сохраняем изменения напрямую через сессию
+            db.add(order)
+            db.commit()
+            db.refresh(order)
             logger.info(f"Payment ID {payment_id} добавлен к заказу {order_id}")
             return True
             
