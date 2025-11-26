@@ -4,6 +4,7 @@ from ..config import settings
 from ..core.logging import get_logger
 import uuid
 from typing import Dict, Any, Optional, List
+from decimal import Decimal, ROUND_HALF_UP
 
 logger = get_logger(__name__)
 
@@ -72,21 +73,32 @@ class PaymentService:
                 receipt["customer"] = customer
 
             # Позиции чека
+            # Формируем позиции исходя из товаров заказа
+            # и рассчитываем общую сумму по чеку, чтобы она совпадала с суммой платежа
+            items_total = Decimal("0.00")
+
             if items:
                 receipt_items: List[Dict[str, Any]] = []
                 for item in items:
                     try:
                         name = str(item.get("name", "Товар"))[:128]
-                        quantity = item.get("quantity", 1)
-                        price = float(item.get("price", amount))
+                        quantity = Decimal(str(item.get("quantity", 1)))
+                        price_per_unit = Decimal(str(item.get("price", amount)))
                     except Exception:
+                        # Если данные кривые, просто пропускаем позицию
                         continue
+
+                    # Сумма по позиции = цена * количество, с округлением до копеек
+                    line_total = (price_per_unit * quantity).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    items_total += line_total
 
                     receipt_items.append({
                         "description": name,
-                        "quantity": quantity,
+                        # Количество ЮKassa принимает как число, но мы приводим к float для сериализации
+                        "quantity": float(quantity),
                         "amount": {
-                            "value": f"{price:.2f}",
+                            # В чеке указывается цена за единицу
+                            "value": str(price_per_unit.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
                             "currency": "RUB"
                         },
                         # 1 = без НДС (подходит для упрощёнки, при необходимости поменяй под свою схему)
@@ -95,6 +107,17 @@ class PaymentService:
 
                 if receipt_items:
                     receipt["items"] = receipt_items
+
+            # Если по чеку что-то насчитали, синхронизируем сумму платежа с суммой по чеку
+            if items and items_total > 0:
+                # Логгируем расхождение для отладки
+                expected = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                if items_total != expected:
+                    logger.warning(
+                        f"Сумма по чеку ({items_total}) не совпадает с amount ({expected}) для заказа {order_id}. "
+                        f"Используем сумму по чеку."
+                    )
+                payment_data["amount"]["value"] = str(items_total)
 
             if receipt:
                 payment_data["receipt"] = receipt
