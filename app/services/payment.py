@@ -6,6 +6,8 @@ import uuid
 from typing import Dict, Any, Optional, List
 from decimal import Decimal, ROUND_HALF_UP
 
+DELIVERY_FEE = Decimal("299.00")
+
 logger = get_logger(__name__)
 
 
@@ -76,9 +78,9 @@ class PaymentService:
             # Формируем позиции исходя из товаров заказа
             # и рассчитываем общую сумму по чеку, чтобы она совпадала с суммой платежа
             items_total = Decimal("0.00")
+            receipt_items: List[Dict[str, Any]] = []
 
             if items:
-                receipt_items: List[Dict[str, Any]] = []
                 for item in items:
                     try:
                         name = str(item.get("name", "Товар"))[:128]
@@ -102,22 +104,42 @@ class PaymentService:
                             "currency": "RUB"
                         },
                         # 1 = без НДС (подходит для упрощёнки, при необходимости поменяй под свою схему)
-                        "vat_code": 1
+                        "vat_code": 1,
+                        # Обязательные поля ФФД: предмет и способ расчёта
+                        "payment_subject": "commodity",
+                        "payment_mode": "full_payment",
                     })
+
+            # Синхронизация суммы платежа и чека, с учётом доставки
+            if items and items_total > 0:
+                # Добавляем фиксированную доставку 299 ₽ как отдельную позицию
+                delivery_amount = DELIVERY_FEE
+                receipt_items.append({
+                    "description": "Доставка",
+                    "quantity": 1.0,
+                    "amount": {
+                        "value": str(delivery_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+                        "currency": "RUB",
+                    },
+                    "vat_code": 1,
+                    "payment_subject": "service",
+                    "payment_mode": "full_payment",
+                })
+                items_total += delivery_amount
+
+                # Логируем, если front прислал amount, который не совпадает с товарами + доставкой
+                expected = items_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                incoming = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                if incoming != expected:
+                    logger.warning(
+                        f"total_amount из заказа ({incoming}) не совпадает с суммой товаров + доставка ({expected}) "
+                        f"для заказа {order_id}. В платеж отправляем сумму по чеку."
+                    )
 
                 if receipt_items:
                     receipt["items"] = receipt_items
 
-            # Если по чеку что-то насчитали, синхронизируем сумму платежа с суммой по чеку
-            if items and items_total > 0:
-                # Логгируем расхождение для отладки
-                expected = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                if items_total != expected:
-                    logger.warning(
-                        f"Сумма по чеку ({items_total}) не совпадает с amount ({expected}) для заказа {order_id}. "
-                        f"Используем сумму по чеку."
-                    )
-                payment_data["amount"]["value"] = str(items_total)
+                payment_data["amount"]["value"] = str(expected)
 
             if receipt:
                 payment_data["receipt"] = receipt
