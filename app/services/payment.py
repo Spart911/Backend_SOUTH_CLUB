@@ -3,7 +3,7 @@ from yookassa import Payment
 from ..config import settings
 from ..core.logging import get_logger
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 logger = get_logger(__name__)
 
@@ -16,7 +16,15 @@ class PaymentService:
         yookassa.Configuration.account_id = settings.yookassa_shop_id
         yookassa.Configuration.secret_key = settings.yookassa_secret_key
     
-    def create_payment(self, order_id: int, amount: float, description: str = None) -> Dict[str, Any]:
+    def create_payment(
+        self,
+        order_id: int,
+        amount: float,
+        description: str | None = None,
+        customer_email: str | None = None,
+        customer_phone: str | None = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
         """
         Создать платеж в ЮKassa
         
@@ -50,6 +58,46 @@ class PaymentService:
                     "order_id": str(order_id)
                 }
             }
+
+            # Добавляем чек (receipt), если есть данные о клиенте/товарах
+            receipt: Dict[str, Any] = {}
+
+            # Данные покупателя
+            customer: Dict[str, str] = {}
+            if customer_email:
+                customer["email"] = customer_email
+            if customer_phone:
+                customer["phone"] = customer_phone
+            if customer:
+                receipt["customer"] = customer
+
+            # Позиции чека
+            if items:
+                receipt_items: List[Dict[str, Any]] = []
+                for item in items:
+                    try:
+                        name = str(item.get("name", "Товар"))[:128]
+                        quantity = item.get("quantity", 1)
+                        price = float(item.get("price", amount))
+                    except Exception:
+                        continue
+
+                    receipt_items.append({
+                        "description": name,
+                        "quantity": quantity,
+                        "amount": {
+                            "value": f"{price:.2f}",
+                            "currency": "RUB"
+                        },
+                        # 1 = без НДС (подходит для упрощёнки, при необходимости поменяй под свою схему)
+                        "vat_code": 1
+                    })
+
+                if receipt_items:
+                    receipt["items"] = receipt_items
+
+            if receipt:
+                payment_data["receipt"] = receipt
             
             # Создаем платеж
             payment = Payment.create(payment_data, idempotence_key)

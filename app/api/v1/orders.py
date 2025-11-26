@@ -63,7 +63,10 @@ async def create_order(
         payment_data = payment_service.create_payment(
             order_id=order.id,
             amount=order.total_amount,
-            description=f"Заказ №{order.id}"
+            description=f"Заказ №{order.id}",
+            customer_email=order.email,
+            customer_phone=order.phone,
+            items=order.items,
         )
         
         # Обновляем заказ с ID платежа
