@@ -65,7 +65,20 @@ class PaymentService:
             }
             
         except Exception as e:
-            logger.error(f"Ошибка при создании платежа для заказа {order_id}: {str(e)}")
+            # пробуем вытащить тело ответа
+            extra = ""
+            try:
+                # у ошибок SDK ЮKassa обычно есть .response или .args с JSON
+                if hasattr(e, "response") and hasattr(e.response, "text"):
+                    extra = f" YooKassa response: {e.response.text}"
+                elif e.args:
+                    extra = f" Details: {e.args!r}"
+            except Exception:
+                pass
+
+            logger.error(
+                f"Ошибка при создании платежа для заказа {order_id}: {e}{extra}"
+            )
             raise
     
     def get_payment_status(self, payment_id: str) -> Optional[Dict[str, Any]]:
