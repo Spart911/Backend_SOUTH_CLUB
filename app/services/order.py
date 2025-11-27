@@ -38,12 +38,15 @@ class OrderService:
             order_time = order_data.order_time or datetime.now(MSK)
 
             # Создаем объект заказа
+            # Убираем timezone из delivery_time, так как пользователь передает время в MSK
+            delivery_time_naive = order_data.delivery_time.replace(tzinfo=None) if order_data.delivery_time.tzinfo else order_data.delivery_time
+
             order = Order(
                 customer_name=order_data.customer_name,
                 email=order_data.email,
                 phone=order_data.phone,
                 address=order_data.address,
-                delivery_time=order_data.delivery_time,
+                delivery_time=delivery_time_naive,
                 order_time=order_time,
                 items=items_data,
                 total_amount=order_data.total_amount,
