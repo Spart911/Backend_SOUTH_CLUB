@@ -35,6 +35,28 @@ YOOKASSA_IPS = [
 ]
 
 
+def get_client_ip(request: Request) -> str:
+    """
+    Получает реальный IP адрес клиента из заголовков.
+    Сначала проверяет X-Forwarded-For, затем X-Real-IP, затем request.client.host
+    """
+    # X-Forwarded-For может содержать цепочку IP, разделенных запятыми
+    # Первый IP - оригинальный клиент
+    x_forwarded_for = request.headers.get("X-Forwarded-For")
+    if x_forwarded_for:
+        # Берем первый IP из цепочки
+        real_ip = x_forwarded_for.split(",")[0].strip()
+        return real_ip
+
+    # X-Real-IP (для Nginx)
+    x_real_ip = request.headers.get("X-Real-IP")
+    if x_real_ip:
+        return x_real_ip.strip()
+
+    # Fallback на client.host
+    return request.client.host
+
+
 def is_yookassa_ip(ip: str) -> bool:
     """Проверяет, принадлежит ли IP-адрес ЮKassa"""
     try:
@@ -185,7 +207,9 @@ async def yookassa_webhook(
     """
     try:
         # Проверка IP-адреса
-        client_ip = request.client.host
+        client_ip = get_client_ip(request)
+        logger.info(f"Webhook IP check: client_ip={client_ip}, X-Forwarded-For={request.headers.get('X-Forwarded-For')}, X-Real-IP={request.headers.get('X-Real-IP')}")
+
         if not is_yookassa_ip(client_ip):
             logger.warning(f"Получен webhook с неавторизованного IP: {client_ip}")
             raise HTTPException(
