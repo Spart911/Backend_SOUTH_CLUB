@@ -4,8 +4,11 @@ from ..models.order import Order
 from ..schemas.order import OrderCreate, OrderResponse, OrderStatusResponse
 from ..repositories.order import OrderRepository
 from ..core.logging import get_logger
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import uuid
+
+# Московский часовой пояс (UTC+3)
+MSK = timezone(timedelta(hours=3))
 
 logger = get_logger(__name__)
 
@@ -30,8 +33,8 @@ class OrderService:
                     "price": item.price
                 })
             
-            # Определяем время заказа: если не передано, используем текущее
-            order_time = order_data.order_time or datetime.now()
+            # Определяем время заказа: если не передано, используем текущее в MSK
+            order_time = order_data.order_time or datetime.now(MSK)
 
             # Создаем объект заказа
             order = Order(

@@ -1,6 +1,9 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_serializer
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Московский часовой пояс (UTC+3)
+MSK = timezone(timedelta(hours=3))
 
 
 class OrderItem(BaseModel):
@@ -67,7 +70,18 @@ class OrderResponse(BaseModel):
     payment_id: Optional[str] = Field(None, description="ID платежа в ЮKassa")
     created_at: datetime = Field(..., description="Дата создания")
     updated_at: datetime = Field(..., description="Дата обновления")
-    
+
+    @field_serializer('delivery_time', 'order_time', 'created_at', 'updated_at')
+    def serialize_datetime(self, value: datetime) -> str:
+        """Сериализует datetime в ISO формат с московским timezone"""
+        if value.tzinfo is None:
+            # Если timezone не указан, предполагаем UTC и конвертируем в MSK
+            value = value.replace(tzinfo=timezone.utc).astimezone(MSK)
+        else:
+            # Конвертируем в московское время
+            value = value.astimezone(MSK)
+        return value.isoformat()
+
     class Config:
         from_attributes = True
 
