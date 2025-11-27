@@ -6,7 +6,7 @@ import uuid
 from typing import Dict, Any, Optional, List
 from decimal import Decimal, ROUND_HALF_UP
 
-DELIVERY_FEE = Decimal("299.00")
+DELIVERY_FEE = Decimal("1.00")
 
 logger = get_logger(__name__)
 
