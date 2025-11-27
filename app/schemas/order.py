@@ -95,18 +95,12 @@ class OrderResponse(BaseModel):
         print(f"DEBUG: Serializing {field_name} - value: {value}, tzinfo: {value.tzinfo}")
 
         if value.tzinfo is None:
-            if field_name == 'delivery_time':
-                # delivery_time пришел как naive datetime, добавляем MSK timezone
-                value = value.replace(tzinfo=MSK)
-                print(f"DEBUG: Added MSK to delivery_time: {value}")
-            else:
-                # Другие поля (order_time, created_at, updated_at) конвертируем из UTC в MSK
-                value = value.replace(tzinfo=timezone.utc).astimezone(MSK)
-        else:
-            # Время уже имеет timezone, оставляем как есть для delivery_time
-            # Для других полей конвертируем в MSK
-            if field_name != 'delivery_time' and value.tzinfo != MSK:
-                value = value.astimezone(MSK)
+            # Это не должно происходить, но на всякий случай
+            value = value.replace(tzinfo=timezone.utc)
+
+        # Конвертируем все в MSK timezone
+        if value.tzinfo != MSK:
+            value = value.astimezone(MSK)
 
         result = value.isoformat()
         print(f"DEBUG: Final {field_name}: {result}")

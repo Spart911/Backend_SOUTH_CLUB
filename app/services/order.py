@@ -38,14 +38,17 @@ class OrderService:
             order_time = order_data.order_time or datetime.now(MSK)
 
             # Создаем объект заказа
-            logger.info(f"Creating order - delivery_time: {order_data.delivery_time}, type: {type(order_data.delivery_time)}, tzinfo: {order_data.delivery_time.tzinfo if hasattr(order_data.delivery_time, 'tzinfo') else 'no tzinfo'}")
+            # Для delivery_time сохраняем как timezone-aware datetime в MSK
+            delivery_time_msk = order_data.delivery_time.replace(tzinfo=MSK) if order_data.delivery_time.tzinfo is None else order_data.delivery_time
+
+            logger.info(f"Creating order - original delivery_time: {order_data.delivery_time}, MSK delivery_time: {delivery_time_msk}")
 
             order = Order(
                 customer_name=order_data.customer_name,
                 email=order_data.email,
                 phone=order_data.phone,
                 address=order_data.address,
-                delivery_time=order_data.delivery_time,
+                delivery_time=delivery_time_msk,
                 order_time=order_time,
                 items=items_data,
                 total_amount=order_data.total_amount,
