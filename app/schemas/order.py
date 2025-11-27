@@ -48,14 +48,6 @@ class OrderCreate(BaseModel):
     items: List[OrderItem] = Field(..., min_items=1, description="Список товаров в заказе")
     total_amount: float = Field(..., gt=0, description="Общая сумма заказа")
 
-    @field_validator('delivery_time')
-    @classmethod
-    def validate_delivery_time(cls, v):
-        """Добавляем MSK timezone к delivery_time если его нет"""
-        if isinstance(v, datetime) and v.tzinfo is None:
-            # Если timezone не указан, предполагаем что это время в MSK
-            v = v.replace(tzinfo=MSK)
-        return v
     
     class Config:
         json_schema_extra = {
@@ -100,19 +92,25 @@ class OrderResponse(BaseModel):
         """Сериализует datetime в ISO формат с московским timezone"""
         field_name = info.field_name
 
+        print(f"DEBUG: Serializing {field_name} - value: {value}, tzinfo: {value.tzinfo}")
+
         if value.tzinfo is None:
             if field_name == 'delivery_time':
-                # delivery_time сохраняется как naive, но представляет время в MSK
+                # delivery_time пришел как naive datetime, добавляем MSK timezone
                 value = value.replace(tzinfo=MSK)
+                print(f"DEBUG: Added MSK to delivery_time: {value}")
             else:
                 # Другие поля (order_time, created_at, updated_at) конвертируем из UTC в MSK
                 value = value.replace(tzinfo=timezone.utc).astimezone(MSK)
         else:
-            # Время уже имеет timezone, конвертируем в MSK если нужно
-            if value.tzinfo != MSK:
+            # Время уже имеет timezone, оставляем как есть для delivery_time
+            # Для других полей конвертируем в MSK
+            if field_name != 'delivery_time' and value.tzinfo != MSK:
                 value = value.astimezone(MSK)
 
-        return value.isoformat()
+        result = value.isoformat()
+        print(f"DEBUG: Final {field_name}: {result}")
+        return result
 
     class Config:
         from_attributes = True
