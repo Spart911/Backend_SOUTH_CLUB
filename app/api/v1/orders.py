@@ -241,14 +241,14 @@ async def yookassa_webhook(
                             
                             message = (
                                 f"✅ <b>Оплачен заказ №{order.id}</b>\n\n"
-                                f"🌐 <b>ФИО Клиента:</b> {customer_name}\n"
+                                f"🌐 <b>ФИО Клиента:</b> {order.customer_name}\n"
                                 f"💰 <b>Сумма:</b> {order.total_amount} руб.\n"
                                 f"📧 <b>Email:</b> {order.email}\n"
                                 f"📱 <b>Телефон:</b> {order.phone}\n"
                                 f"📍 <b>Адрес:</b> {order.address}\n"
                                 f"🕒 <b>Время доставки:</b> {order.delivery_time}\n"
                                 f"⏰ <b>Время заказа:</b> {order.order_time}\n\n"
-                                f"🌐 <b>Статус заказа:</b> {status}\n"
+                                f"🌐 <b>Статус заказа:</b> {order.status}\n"
                                 f"📋 <b>Состав заказа:</b>\n{items_text}"
                             )
                             
