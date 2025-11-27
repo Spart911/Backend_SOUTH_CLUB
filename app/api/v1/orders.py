@@ -226,12 +226,41 @@ async def yookassa_webhook(
                 # Получаем заказ по ID платежа
                 order = order_service.get_order_by_payment_id(db, payment_id)
                 if order:
+                    # Отладка: проверяем типы данных времени
+                    logger.info(f"Order time type: {type(order.order_time)}, value: {order.order_time}")
+                    logger.info(f"Delivery time type: {type(order.delivery_time)}, value: {order.delivery_time}")
+
                     # Проверяем статус платежа через API
                     payment_status = payment_service.get_payment_status(payment_id)
                     if payment_status and payment_status["status"] == "succeeded":
                         # Обновляем статус заказа
                         order_service.update_order_status(db, order.id, "paid")
                         
+                        # Функция для форматирования времени в MSK
+                        def format_msk_time(dt):
+                            from datetime import datetime, timezone, timedelta
+                            MSK = timezone(timedelta(hours=3))
+
+                            if isinstance(dt, str):
+                                # Парсим ISO строку и конвертируем в MSK
+                                try:
+                                    if dt.endswith('Z'):
+                                        dt = dt[:-1] + '+00:00'
+                                    parsed_dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+                                    # Конвертируем в MSK
+                                    parsed_dt = parsed_dt.astimezone(MSK)
+                                    return parsed_dt.strftime('%d.%m.%Y %H:%M')
+                                except:
+                                    return dt[:16].replace('T', ' ')
+                            elif hasattr(dt, 'strftime'):
+                                # Конвертируем datetime в MSK
+                                if dt.tzinfo is None:
+                                    dt = dt.replace(tzinfo=timezone.utc)
+                                dt = dt.astimezone(MSK)
+                                return dt.strftime('%d.%m.%Y %H:%M')
+                            else:
+                                return str(dt)
+
                         # Отправляем уведомление в Telegram
                         try:
                             items_text = "\n".join([
@@ -246,8 +275,8 @@ async def yookassa_webhook(
                                 f"📧 <b>Email:</b> {order.email}\n"
                                 f"📱 <b>Телефон:</b> {order.phone}\n"
                                 f"📍 <b>Адрес:</b> {order.address}\n"
-                                f"🕒 <b>Время доставки:</b> {order.delivery_time}\n"
-                                f"⏰ <b>Время заказа:</b> {order.order_time}\n\n"
+                                f"🕒 <b>Время доставки:</b> {format_msk_time(order.delivery_time)}\n"
+                                f"⏰ <b>Время заказа:</b> {format_msk_time(order.order_time)}\n\n"
                                 f"🌐 <b>Статус заказа:</b> {order.status}\n"
                                 f"📋 <b>Состав заказа:</b>\n{items_text}"
                             )
