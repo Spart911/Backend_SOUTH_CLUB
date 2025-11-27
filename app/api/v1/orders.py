@@ -5,8 +5,8 @@ import ipaddress
 
 from ...dependencies import get_db_session
 from ...schemas.order import (
-    OrderCreate, OrderResponse, OrderStatusResponse, 
-    PaymentResponse, YooKassaNotification
+    OrderCreate, OrderResponse, OrderStatusResponse,
+    PaymentResponse, YooKassaNotification, get_size_label
 )
 from ...services.order import OrderService
 from ...services.payment import PaymentService
@@ -235,18 +235,20 @@ async def yookassa_webhook(
                         # Отправляем уведомление в Telegram
                         try:
                             items_text = "\n".join([
-                                f"- {item['name']} x{item['quantity']} ({item['price']} руб.)" 
+                                f"- {item['name']} (размер: {get_size_label(item['size'])}) x{item['quantity']} ({item['price']} руб.)"
                                 for item in order.items
                             ])
                             
                             message = (
                                 f"✅ <b>Оплачен заказ №{order.id}</b>\n\n"
+                                f"🌐 <b>ФИО Клиента:</b> {customer_name}\n"
                                 f"💰 <b>Сумма:</b> {order.total_amount} руб.\n"
                                 f"📧 <b>Email:</b> {order.email}\n"
                                 f"📱 <b>Телефон:</b> {order.phone}\n"
                                 f"📍 <b>Адрес:</b> {order.address}\n"
                                 f"🕒 <b>Время доставки:</b> {order.delivery_time}\n"
                                 f"⏰ <b>Время заказа:</b> {order.order_time}\n\n"
+                                f"🌐 <b>Статус заказа:</b> {status}\n"
                                 f"📋 <b>Состав заказа:</b>\n{items_text}"
                             )
                             

@@ -30,7 +30,8 @@ class OrderService:
                 items_data.append({
                     "name": item.name,
                     "quantity": item.quantity,
-                    "price": item.price
+                    "price": item.price,
+                    "size": item.size
                 })
             
             # Определяем время заказа: если не передано, используем текущее в MSK

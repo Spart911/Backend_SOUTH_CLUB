@@ -5,12 +5,26 @@ from datetime import datetime, timezone, timedelta
 # Московский часовой пояс (UTC+3)
 MSK = timezone(timedelta(hours=3))
 
+# Размеры товаров
+SIZE_LABELS = {
+    0: 'XS',
+    1: 'S',
+    2: 'M',
+    3: 'L',
+    4: 'XL'
+}
+
+def get_size_label(size_value: int) -> str:
+    """Преобразует числовое значение размера в текстовую метку"""
+    return SIZE_LABELS.get(size_value, f'Размер {size_value}')
+
 
 class OrderItem(BaseModel):
     """Элемент заказа"""
     name: str = Field(..., description="Название товара")
     quantity: int = Field(..., gt=0, description="Количество товара")
     price: float = Field(..., gt=0, description="Цена за единицу")
+    size: int = Field(..., ge=0, le=4, description="Размер товара (0=XS, 1=S, 2=M, 3=L, 4=XL)")
     
     class Config:
         json_schema_extra = {
@@ -47,7 +61,8 @@ class OrderCreate(BaseModel):
                     {
                         "name": "Футболка черная",
                         "quantity": 2,
-                        "price": 1500.0
+                        "price": 1500.0,
+                        "size": 2
                     }
                 ],
                 "total_amount": 3000.0
@@ -64,7 +79,7 @@ class OrderResponse(BaseModel):
     address: str = Field(..., description="Адрес доставки")
     delivery_time: datetime = Field(..., description="Время доставки")
     order_time: datetime = Field(..., description="Время заказа")
-    items: List[Dict[str, Any]] = Field(..., description="Товары в заказе")
+    items: List[Dict[str, Any]] = Field(..., description="Товары в заказе (name, quantity, price, size)")
     total_amount: float = Field(..., description="Общая сумма заказа")
     status: str = Field(..., description="Статус заказа")
     payment_id: Optional[str] = Field(None, description="ID платежа в ЮKassa")
