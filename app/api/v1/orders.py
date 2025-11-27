@@ -30,6 +30,7 @@ YOOKASSA_IPS = [
     ipaddress.ip_network("77.75.153.0/25"),
     ipaddress.ip_network("77.75.156.11/32"),
     ipaddress.ip_network("77.75.156.35/32"),
+    ipaddress.ip_network("77.75.154.128/25"),
     ipaddress.ip_network("2a02:5180::/32"),
 ]
 
