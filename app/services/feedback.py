@@ -55,3 +55,13 @@ class FeedbackService:
         except Exception as e:
             raise TelegramBotException(str(e))
 
+    async def send_telegram_message(self, message: str) -> bool:
+        """
+        Отправить произвольное сообщение в Telegram
+        """
+        try:
+            await self.telegram_bot.send_message(message)
+            return True
+        except Exception as e:
+            raise TelegramBotException(str(e))
+
